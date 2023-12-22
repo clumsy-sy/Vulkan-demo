@@ -9,6 +9,8 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+
+
 # glslc 编译 shader file
 # find_program(GLSLC_PROGRAM glslc REQUIRED)
 # execute_process(COMMAND ${GLSLC_PROGRAM} ${CMAKE_SOURCE_DIR}/shader/shader.vert -o ${CMAKE_SOURCE_DIR}/spv/vert.spv)
@@ -25,7 +27,20 @@ link_directories("C:/VulkanSDK/1.3.268.0/Lib")
 link_directories("C:/Users/Sy200/Libraries/glfw-3.3.8.bin.WIN64/glfw-3.3.8.bin.WIN64/lib-vc2022")
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (Vulkan-demo  "main.cpp")
+
+aux_source_directory(header HEAD)
+aux_source_directory(src SRC)
+
+add_executable (Vulkan-demo ${HEAD} ${SRC} "main.cpp")
+
+# 消除有中文的报错 && 默认库“MSVCRT”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
+if(MSVC)
+  target_compile_options(Vulkan-demo PRIVATE /utf-8)
+  set(CMAKE_EXE_LINKER_FLAGS /NODEFAULTLIB:"MSVCRT.lib")
+endif()
+
+
+
 
 target_link_libraries(Vulkan-demo PRIVATE vulkan-1.lib)
 target_link_libraries(Vulkan-demo PRIVATE glfw3.lib)
