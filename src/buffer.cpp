@@ -9,8 +9,9 @@ BufferPkg::BufferPkg(size_t size, vk::BufferUsageFlags usage, vk::MemoryProperty
 
   this->size = size;
   vk::BufferCreateInfo createInfo;
-  createInfo.setUsage(usage).setSize(size).setSharingMode(
-      vk::SharingMode::eExclusive);
+  createInfo.setUsage(usage)
+            .setSize(size)
+            .setSharingMode(vk::SharingMode::eExclusive);
   
   buffer = device.createBuffer(createInfo);
   // vk 需要的内存大小，与我们申请的不同

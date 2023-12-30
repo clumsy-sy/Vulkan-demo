@@ -23,26 +23,16 @@ private:
   std::unique_ptr<BufferPkg> hostVertexBuffer;
   std::unique_ptr<BufferPkg> deviceVertexBuffer;
 
+  std::unique_ptr<BufferPkg> hostIndexsBuffer;
+  std::unique_ptr<BufferPkg> deviceIndexsBuffer;
+
   void createFences();
   void createSemaphores();
   void createCmdBuffers();
-  void createVertexBuffer();
-  void bufferVertexData();
-
-  // vk::CommandPool cmdPool;
-  // vk::CommandBuffer cmdBuffer;
-
-  // vk::Semaphore imageAvaliable;
-  // vk::Semaphore imageDrawFinish;
-  // vk::Fence cmdAvaliableFence;
-
-  // std::unique_ptr<Buffer> hostVertexBuffer_;
-  // std::unique_ptr<Buffer> deviceVertexBuffer_;
-
-  // void initCmdPool();
-  // void allocCmdBuffer();
-  // void createSems();
-  // void createFence();
+  void createBuffers();
+  void bufferData();
+  void copyBuffer(vk::Buffer &src, vk::Buffer &dst,
+      size_t size, size_t srcOffset, size_t dstOffset);
 };
 
 } // namespace app

@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <memory>
 
 #include <memory>
@@ -13,11 +14,13 @@ Renderer::Renderer(int maxFlightCount)
   createFences();
   createSemaphores();
   createCmdBuffers();
-  createVertexBuffer();
-  bufferVertexData();
+  createBuffers();
+  bufferData();
 }
 
 Renderer::~Renderer() {
+  hostIndexsBuffer.reset();
+  deviceIndexsBuffer.reset();
   hostVertexBuffer.reset();
   deviceVertexBuffer.reset();
   auto &device = Application::GetInstance().device;
@@ -33,7 +36,6 @@ Renderer::~Renderer() {
 }
 
 void Renderer::Render() {
-    std::cout << "Start Render !\n";
   auto &device = Application::GetInstance().device;
   auto &swapchain = Application::GetInstance().swapchain;
   auto &renderProcess =
@@ -90,7 +92,8 @@ void Renderer::Render() {
       vk::DeviceSize offset = 0;
       cmdBufs[curFrame].bindVertexBuffers(
           0, deviceVertexBuffer->buffer, offset);
-      cmdBufs[curFrame].draw(deviceVertexBuffer->size, 1, 0, 0);
+      cmdBufs[curFrame].bindIndexBuffer(deviceIndexsBuffer->buffer, 0, vk::IndexType::eUint32);
+      cmdBufs[curFrame].drawIndexed(deviceIndexsBuffer->size / sizeof(uint32_t), 1, 0, 0, 0);
     }
     cmdBufs[curFrame].endRenderPass();
   }
@@ -124,12 +127,13 @@ void Renderer::Render() {
   curFrame = (curFrame + 1) % maxFlightCount;
 
   // CPU GPU 同步
-  auto waitResult = device.waitForFences(fences[curFrame],
-      true, std::numeric_limits<uint64_t>::max());
-  if (waitResult != vk::Result::eSuccess) {
-    throw std::runtime_error("wait for fence failed!!!");
-  }
-  device.resetFences(fences[curFrame]);
+
+//   auto waitResult = device.waitForFences(fences[curFrame],
+//       true, std::numeric_limits<uint64_t>::max());
+//   if (waitResult != vk::Result::eSuccess) {
+//     throw std::runtime_error("wait for fence failed!!!");
+//   }
+//   device.resetFences(fences[curFrame]);
 }
 void Renderer::createFences() {
     fences.resize(maxFlightCount, nullptr);
@@ -165,29 +169,47 @@ void Renderer::createCmdBuffers() {
     }
 }
 
-void Renderer::createVertexBuffer() {
+void Renderer::createBuffers() {
     hostVertexBuffer = std::make_unique<BufferPkg>(sizeof(vertices[0]) * vertices.size(),
                                        vk::BufferUsageFlagBits::eTransferSrc,
                                        vk::MemoryPropertyFlagBits::eHostVisible|vk::MemoryPropertyFlagBits::eHostCoherent);
     deviceVertexBuffer = std::make_unique<BufferPkg>(sizeof(vertices[0]) * vertices.size(),
                                          vk::BufferUsageFlagBits::eVertexBuffer|vk::BufferUsageFlagBits::eTransferDst,
                                          vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+    hostIndexsBuffer = std::make_unique<BufferPkg>(sizeof(indices[0]) * indices.size(),
+                                       vk::BufferUsageFlagBits::eTransferSrc,
+                                       vk::MemoryPropertyFlagBits::eHostVisible|vk::MemoryPropertyFlagBits::eHostCoherent);
+    deviceIndexsBuffer = std::make_unique<BufferPkg>(sizeof(indices[0]) * indices.size(),
+                                         vk::BufferUsageFlagBits::eIndexBuffer|vk::BufferUsageFlagBits::eTransferDst,
+                                         vk::MemoryPropertyFlagBits::eDeviceLocal);
 }
 
-void Renderer::bufferVertexData() {
+void Renderer::bufferData() {
     memcpy(hostVertexBuffer->map, vertices.data(), sizeof(vertices[0]) * vertices.size());
 
+
+    copyBuffer(hostVertexBuffer->buffer, deviceVertexBuffer->buffer,
+               hostVertexBuffer->size, 0, 0);
+
+    memcpy(hostIndexsBuffer->map, indices.data(), sizeof(indices[0]) * indices.size());
+    copyBuffer(hostIndexsBuffer->buffer, deviceIndexsBuffer->buffer,
+               hostIndexsBuffer->size, 0, 0);
+}
+
+void Renderer::copyBuffer(vk::Buffer& src, vk::Buffer& dst, size_t size, size_t srcOffset, size_t dstOffset) {
     auto cmdBuf = Application::GetInstance().commandManager->CreateOneCommandBuffer();
+
     vk::CommandBufferBeginInfo begin;
     begin.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmdBuf.begin(begin); {
         vk::BufferCopy region;
-        region.setSize(hostVertexBuffer->size)
-              .setSrcOffset(0)
-              .setDstOffset(0);
-        cmdBuf.copyBuffer(hostVertexBuffer->buffer, deviceVertexBuffer->buffer, region);
+        region.setSize(size)
+              .setSrcOffset(srcOffset)
+              .setDstOffset(dstOffset);
+        cmdBuf.copyBuffer(src, dst, region);
     } cmdBuf.end();
-    
+
     vk::SubmitInfo submit;
     submit.setCommandBuffers(cmdBuf);
     Application::GetInstance().graphicQueue.submit(submit);

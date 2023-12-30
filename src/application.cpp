@@ -1,5 +1,7 @@
 #include "../header/application.h"
+#include <cstdint>
 #include <memory>
+#include <chrono>
 
 namespace app {
 // 实例
@@ -52,10 +54,23 @@ void Application::initVulkan() {
 }
 // 窗口内的渲染循环
 void Application::mainLoop() {
+  auto startTime =
+      std::chrono::high_resolution_clock::now();
+  uint64_t frame = 0;
   while (!glfwWindowShouldClose(window)) {
-    std::cout << "Main Loop !\n"; 
     renderer->Render();
     glfwPollEvents();
+    auto nowTime =
+        std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::seconds>(
+            nowTime - startTime);
+    if (duration.count() >= 1) {
+      std::cout << "FPS : " << frame << "\n";
+      frame = 0;
+      startTime = nowTime;
+    }
+    frame++;
   }
   device.waitIdle();
 }
@@ -108,7 +123,7 @@ void Application::createSurface() {
   }
   surface = static_cast<vk::SurfaceKHR>(surfaceOld);
 }
-//选取一个物理设备（找一个支持拓展的，一般选第一个）
+// 选取一个物理设备（找一个支持拓展的，一般选第一个）
 void Application::pickPhysicalDevice() {
   auto devices = instance.enumeratePhysicalDevices();
   phyDevice = devices[0];
@@ -194,7 +209,7 @@ void Application::createRenderProcess() {
   renderProcess->createGraphicsPipeline(width, height);
 }
 
-void Application::createCommandManager(){
+void Application::createCommandManager() {
   commandManager = std::make_unique<CommandManager>();
 }
 // 创建渲染器
