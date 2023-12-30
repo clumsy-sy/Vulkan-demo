@@ -9,6 +9,7 @@ void initRender(uint32_t width = 800, uint32_t height = 600) {
 auto main() -> int {
   initRender();
   auto &app = app::Application::GetInstance();
+  std::cout << "Prepare!"<< "\n";
   try {
     app.run();
   } catch (const std::exception &e) {

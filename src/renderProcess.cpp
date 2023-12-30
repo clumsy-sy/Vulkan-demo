@@ -1,16 +1,31 @@
 #include "../header/renderProcess.h"
 #include "../header/application.h"
-#include "../header/shader.h"
+#include "../header/vertex.h"
 
 
 namespace app {
 
-void RenderProcess::InitPipeline(uint32_t width, uint32_t height) {
+void RenderProcess::createGraphicsPipeline(uint32_t width, uint32_t height) {
   vk::GraphicsPipelineCreateInfo createInfo;
 
+  
+
   // 1. Vertex input
-  vk::PipelineVertexInputStateCreateInfo inputState;
-  createInfo.setPVertexInputState(&inputState);
+  // vk::PipelineVertexInputStateCreateInfo inputState;
+  // createInfo.setPVertexInputState(&inputState);
+
+  vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
+    auto attribute = Vertex::GetAttribute();
+    auto binding = Vertex::GetBinding();
+
+    // vertexInputCreateInfo.vertexBindingDescriptionCount = 1;
+    // vertexInputCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribute.size());
+    // vertexInputCreateInfo.pVertexBindingDescriptions = &binding;
+    // vertexInputCreateInfo.pVertexAttributeDescriptions = attribute.data();
+    vertexInputCreateInfo.setVertexBindingDescriptions(binding)
+                         .setVertexAttributeDescriptions(attribute);
+    createInfo.setPVertexInputState(&vertexInputCreateInfo);
+
   // 2. Vertex Assembly
   vk::PipelineInputAssemblyStateCreateInfo inputAss;
   inputAss.setPrimitiveRestartEnable(false).setTopology(
@@ -18,7 +33,7 @@ void RenderProcess::InitPipeline(uint32_t width, uint32_t height) {
 
   createInfo.setPInputAssemblyState(&inputAss);
   // 3. shader
-  auto stages = Shader::GetInstance().GetStage();
+  auto stages = Application::GetInstance().shader->GetStage();
   createInfo.setStages(stages);
 
   // 4. viewport

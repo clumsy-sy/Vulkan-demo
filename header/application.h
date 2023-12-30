@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <vulkan/vulkan.hpp>
 // #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -10,10 +11,12 @@
 #include "renderer.h"
 #include "shader.h"
 #include "swapchain.h"
+#include "commandManager.h"
 #include "tool.h"
 
 namespace app {
 
+// 验证层和拓展层 showPropInfo() 可以输出信息
 const std::vector<const char *> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
 const std::vector<const char *> deviceExtensions = {
@@ -28,6 +31,7 @@ struct QueueFamilyIndices {
   }
 };
 
+// 应用实例（单例模式）
 class Application final {
 private:
   // 单例
@@ -36,9 +40,7 @@ private:
   Application(uint32_t w, uint32_t h) : width(w), height(h){};
 
 public:
-  // 单例模式
   static auto GetInstance() -> Application & { return *instance_; }
-
   static void Init(uint32_t w, uint32_t h);
   static void Quit();
 
@@ -60,12 +62,16 @@ public:
   vk::Queue presentQueue;
   // 交换链
   std::unique_ptr<Swapchain> swapchain;
-  // shader 单例
-  // std::unique_ptr<Shader> shader;
+  // shader
+  std::unique_ptr<Shader> shader;
+  // commandManger
+  std::unique_ptr<CommandManager> commandManager;
   // pipeline
   std::unique_ptr<RenderProcess> renderProcess;
   // renderer
   std::unique_ptr<Renderer> renderer;
+  // 采样器
+  vk::Sampler sampler;
 
 public:
   void run();
@@ -82,13 +88,14 @@ private:
 
   // 创建实例
   void createInstance();
+  void createSurface();
   void pickPhysicalDevice();
   void createDevice();
   void getGQueue();
-  void createSurface();
   void createSwapchain();
   void createShaderModules();
   void createRenderProcess();
+  void createCommandManager();
   void createRenderer();
 
   // 输出一些信息

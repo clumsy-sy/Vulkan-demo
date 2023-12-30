@@ -13,7 +13,7 @@ public:
 
   void InitRenderPass();
   void InitLayout();
-  void InitPipeline(uint32_t width, uint32_t height);
+  void createGraphicsPipeline(uint32_t width, uint32_t height);
 };
 
 } // namespace app
