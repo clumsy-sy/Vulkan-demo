@@ -35,7 +35,7 @@ public:
   void queryInfo(uint32_t width, uint32_t height);
   void getImages();
   void createImageViews();
-  void createFrameBuffers(uint32_t width, uint32_t height);
+  void createFrameBuffers();
 };
 
 } // namespace app

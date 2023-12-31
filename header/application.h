@@ -95,6 +95,7 @@ private:
   void createSwapchain();
   void createShaderModules();
   void createRenderProcess();
+  void createGraphicsPipeline();
   void createCommandManager();
   void createRenderer();
 

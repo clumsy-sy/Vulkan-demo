@@ -49,6 +49,7 @@ void Application::initVulkan() {
   createSwapchain();
   createShaderModules();
   createRenderProcess();
+  createGraphicsPipeline();
   createCommandManager();
   createRenderer();
 }
@@ -203,10 +204,11 @@ void Application::createShaderModules() {
 // 创建渲染流程
 void Application::createRenderProcess() {
   renderProcess = std::make_unique<RenderProcess>();
-  renderProcess->InitRenderPass();
-  renderProcess->InitLayout();
-  swapchain->createFrameBuffers(width, height);
-  renderProcess->createGraphicsPipeline(width, height);
+}
+
+void Application::createGraphicsPipeline() {
+  swapchain->createFrameBuffers();
+  renderProcess->RecreateGraphicsPipeline(*shader);
 }
 
 void Application::createCommandManager() {

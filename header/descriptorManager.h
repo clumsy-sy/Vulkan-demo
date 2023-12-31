@@ -14,12 +14,12 @@ public:
   };
 
   static void Init(uint32_t maxFlight) {
-    instance_ = std::make_unique<DescriptorSetManager>(maxFlight);
+    instance = std::make_unique<DescriptorSetManager>(maxFlight);
   }
 
-  static void Quit() { instance_.reset(); }
+  static void Quit() { instance.reset(); }
 
-  static DescriptorSetManager &Instance() { return *instance_; }
+  static auto Instance() -> DescriptorSetManager & { return *instance; }
 
   DescriptorSetManager(uint32_t maxFlight);
   ~DescriptorSetManager();
@@ -31,21 +31,21 @@ public:
 
 private:
   struct PoolInfo {
-    vk::DescriptorPool pool_;
+    vk::DescriptorPool pool;
     uint32_t remainNum_;
   };
 
-  PoolInfo bufferSetPool_;
+  PoolInfo bufferSetPool;
 
-  std::vector<PoolInfo> fulledImageSetPool_;
-  std::vector<PoolInfo> avalibleImageSetPool_;
+  std::vector<PoolInfo> fulledImageSetPool;
+  std::vector<PoolInfo> avalibleImageSetPool;
 
   void addImageSetPool();
   auto getAvaliableImagePoolInfo() -> PoolInfo &;
 
-  uint32_t maxFlight_;
+  uint32_t maxFlight;
 
-  static std::unique_ptr<DescriptorSetManager> instance_;
+  static std::unique_ptr<DescriptorSetManager> instance;
 };
 
 } // namespace app
