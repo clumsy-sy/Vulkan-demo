@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan/vulkan.hpp"
+#include <cstddef>
 #include <glm/glm.hpp>
 
 namespace app {
@@ -8,11 +9,12 @@ namespace app {
 struct Vertex {
   glm::vec2 pos;
   glm::vec3 color;
+  glm::vec2 texCoord;
 
   static auto GetAttribute()
       -> std::array<vk::VertexInputAttributeDescription,
-          2> {
-    std::array<vk::VertexInputAttributeDescription, 2> attr;
+          3> {
+    std::array<vk::VertexInputAttributeDescription, 3> attr;
     // offsetof 自动计算偏移
     attr[0]
         .setBinding(0)
@@ -24,6 +26,12 @@ struct Vertex {
         .setFormat(vk::Format::eR32G32B32Sfloat)
         .setLocation(1)
         .setOffset(offsetof(Vertex, color));
+    attr[2]
+        .setBinding(0)
+        .setFormat(vk::Format::eR32G32Sfloat)
+        .setLocation(2)
+        .setOffset(offsetof(Vertex, texCoord));
+
     return attr;
   }
 

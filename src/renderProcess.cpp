@@ -36,9 +36,8 @@ void RenderProcess::RecreateRenderPass() {
 
 auto RenderProcess::createLayout() -> vk::PipelineLayout {
   vk::PipelineLayoutCreateInfo createInfo;
-  createInfo.setPushConstantRangeCount(0).setSetLayouts(
-      Application::GetInstance().shader->layouts);
-
+  auto layout = Application::GetInstance().shader->layouts;
+  createInfo.setSetLayouts(layout);
   return Application::GetInstance()
       .device.createPipelineLayout(createInfo);
 }

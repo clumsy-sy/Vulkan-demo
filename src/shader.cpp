@@ -38,31 +38,52 @@ Shader::~Shader() {
 }
 
 void Shader::initDescriptorSetLayouts() {
-  vk::DescriptorSetLayoutCreateInfo createInfo;
-  std::vector<vk::DescriptorSetLayoutBinding> bindings(1);
-  bindings[0]
+
+  //   vk::DescriptorSetLayoutCreateInfo vertCreateInfo;
+  //   vk::DescriptorSetLayoutBinding vertBinding;
+  //   vertBinding
+  //       .setBinding(0)
+  //       .setDescriptorCount(1)
+  //       .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+  //       .setStageFlags(vk::ShaderStageFlagBits::eVertex);
+  //   vertCreateInfo.setBindings(vertBinding);
+
+  //   layouts.push_back(
+  //       Application::GetInstance()
+  //           .device.createDescriptorSetLayout(vertCreateInfo));
+  //   // 图像的描述符
+  //   vk::DescriptorSetLayoutCreateInfo fragCreateInfo;
+  //   vk::DescriptorSetLayoutBinding fragBinding;
+  //   fragBinding
+  //       .setBinding(1)
+  //       .setDescriptorCount(1)
+  //       .setDescriptorType(
+  //           vk::DescriptorType::eCombinedImageSampler)
+  //       .setStageFlags(vk::ShaderStageFlagBits::eFragment);
+  //   fragCreateInfo.setBindings(fragBinding);
+
+  //   layouts.push_back(
+  //       Application::GetInstance()
+  //           .device.createDescriptorSetLayout(fragCreateInfo));
+
+  vk::DescriptorSetLayoutCreateInfo CreateInfo;
+  std::array<vk::DescriptorSetLayoutBinding, 2> Binding;
+  Binding[0]
       .setBinding(0)
       .setDescriptorCount(1)
       .setDescriptorType(vk::DescriptorType::eUniformBuffer)
       .setStageFlags(vk::ShaderStageFlagBits::eVertex);
-  createInfo.setBindings(bindings);
 
-  layouts.push_back(
-      Application::GetInstance()
-          .device.createDescriptorSetLayout(createInfo));
-
-  bindings.resize(1);
-  bindings[0]
-      .setBinding(0)
+  Binding[1]
+      .setBinding(1)
       .setDescriptorCount(1)
       .setDescriptorType(
           vk::DescriptorType::eCombinedImageSampler)
       .setStageFlags(vk::ShaderStageFlagBits::eFragment);
-  createInfo.setBindings(bindings);
-
+  CreateInfo.setBindings(Binding);
   layouts.push_back(
       Application::GetInstance()
-          .device.createDescriptorSetLayout(createInfo));
+          .device.createDescriptorSetLayout(CreateInfo));
 }
 
 auto Shader::GetPushConstantRange() const

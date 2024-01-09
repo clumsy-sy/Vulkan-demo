@@ -4,8 +4,8 @@ namespace app {
 
 // auto Vec::GetAttributeDescription()
 //     -> std::vector<vk::VertexInputAttributeDescription> {
-//   std::vector<vk::VertexInputAttributeDescription> descriptions(2);
-//   descriptions[0]
+//   std::vector<vk::VertexInputAttributeDescription>
+//   descriptions(2); descriptions[0]
 //       .setBinding(0)
 //       .setFormat(vk::Format::eR32G32Sfloat)
 //       .setLocation(0)
@@ -18,16 +18,18 @@ namespace app {
 //   return descriptions;
 // }
 
-// std::vector<vk::VertexInputBindingDescription> Vec::GetBindingDescription() {
-//   std::vector<vk::VertexInputBindingDescription> descriptions(1);
-//   descriptions[0]
+// std::vector<vk::VertexInputBindingDescription>
+// Vec::GetBindingDescription() {
+//   std::vector<vk::VertexInputBindingDescription>
+//   descriptions(1); descriptions[0]
 //       .setBinding(0)
 //       .setStride(sizeof(Vertex))
 //       .setInputRate(vk::VertexInputRate::eVertex);
 //   return descriptions;
 // }
 
-// auto Mat4::Create(const std::initializer_list<float> &initList) -> Mat4 {
+// auto Mat4::Create(const std::initializer_list<float>
+// &initList) -> Mat4 {
 //   Mat4 mat;
 //   int counter = 0;
 //   for (auto &value : initList) {
@@ -54,7 +56,8 @@ namespace app {
 
 // auto Mat4::CreateIdentity() -> Mat4 { return Mat4{}; }
 
-// auto Mat4::CreateOrtho(int left, int right, int top, int bottom, int near,
+// auto Mat4::CreateOrtho(int left, int right, int top, int
+// bottom, int near,
 //                        int far) -> Mat4 {
 //   Mat4 mat = CreateIdentity();
 

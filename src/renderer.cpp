@@ -8,6 +8,7 @@
 #include "../header/renderer.h"
 #include "../header/Application.h"
 #include "vertex.cpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace app {
 
@@ -18,22 +19,24 @@ Renderer::Renderer(int maxFlightCount)
   createCmdBuffers();
   createBuffers();
   bufferData();
-
   DescriptorSetManager::Init(maxFlightCount);
-  descriptorSets = DescriptorSetManager::Instance().AllocBufferSets(maxFlightCount);
+  createSampler();
+  createTexture();
+  descriptorSets =
+      DescriptorSetManager::Instance().AllocBufferSets(
+          maxFlightCount);
   updateDescriptorSets();
-  // createDescriptorPool(maxFlightCount);
-  // allocDescriptorSets(maxFlightCount);
-  // updateDescriptorSets();
 }
 
 Renderer::~Renderer() {
+  auto &device = Application::GetInstance().device;
+  device.destroySampler(sampler);
+  texture.reset();
   DescriptorSetManager::Quit();
   hostIndexsBuffer.reset();
   deviceIndexsBuffer.reset();
   hostVertexBuffer.reset();
   deviceVertexBuffer.reset();
-  auto &device = Application::GetInstance().device;
   for (auto &sem : imageAvaliableSems) {
     device.destroySemaphore(sem);
   }
@@ -106,15 +109,17 @@ void Renderer::Render() {
       cmdBufs[curFrame].bindIndexBuffer(
           deviceIndexsBuffer->buffer, 0,
           vk::IndexType::eUint32);
-   
-      if(curFrame > descriptorSets.size()) {
-        std::cerr<< "Error : descriptorSets outflow!" << "\n";
+
+      if (curFrame > descriptorSets.size()) {
+        std::cerr << "Error : descriptorSets outflow!"
+                  << "\n";
         throw std::runtime_error("descriptorSets outflow!");
       }
-      cmdBufs[curFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                           renderProcess->layout,
-                           0, descriptorSets[curFrame].set, {});
-  
+      cmdBufs[curFrame].bindDescriptorSets(
+          vk::PipelineBindPoint::eGraphics,
+          renderProcess->layout, 0,
+          {descriptorSets[curFrame].set}, {});
+
       cmdBufs[curFrame].drawIndexed(
           deviceIndexsBuffer->size / sizeof(uint32_t), 1, 0,
           0, 0);
@@ -287,40 +292,94 @@ void Renderer::copyBuffer(vk::Buffer &src, vk::Buffer &dst,
 }
 
 void Renderer::updateUniformBuffer(uint32_t currentImage) {
-    auto &swapchainExtentInfo = Application::GetInstance().swapchain->info.imageExtent; 
-    static auto startTime = std::chrono::high_resolution_clock::now();
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-    MVP ubo;
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.project = glm::perspective(glm::radians(45.0f), swapchainExtentInfo.width / (float) swapchainExtentInfo.height, 0.1f, 10.0f);
-    ubo.project[1][1] *= -1;
-    memcpy(hostUniformBuffers[currentImage]->map, &ubo, sizeof(ubo));
-    copyBuffer(hostUniformBuffers[currentImage]->buffer,
-        deviceUniformBuffers[currentImage]->buffer,
-        hostUniformBuffers[currentImage]->size, 0, 0);
+  auto &swapchainExtentInfo =
+      Application::GetInstance()
+          .swapchain->info.imageExtent;
+  static auto startTime =
+      std::chrono::high_resolution_clock::now();
+  auto currentTime =
+      std::chrono::high_resolution_clock::now();
+  float time = std::chrono::duration<float,
+      std::chrono::seconds::period>(currentTime - startTime)
+                   .count();
+  MVP ubo;
+  ubo.model = glm::rotate(glm::mat4(1.0f),
+      time * glm::radians(90.0f),
+      glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f),
+      glm::vec3(0.0f, 0.0f, 0.0f),
+      glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.project = glm::perspective(glm::radians(45.0f),
+      swapchainExtentInfo.width /
+          (float)swapchainExtentInfo.height,
+      0.1f, 10.0f);
+  ubo.project[1][1] *= -1;
+  memcpy(hostUniformBuffers[currentImage]->map, &ubo,
+      sizeof(ubo));
+  copyBuffer(hostUniformBuffers[currentImage]->buffer,
+      deviceUniformBuffers[currentImage]->buffer,
+      hostUniformBuffers[currentImage]->size, 0, 0);
 }
 
 // bind uniform
 void Renderer::updateDescriptorSets() {
-    for (size_t i = 0; i < descriptorSets.size(); i++) {
-        // bind MVP buffer
-        vk::DescriptorBufferInfo bufferInfo1;
-        bufferInfo1.setBuffer(deviceUniformBuffers[i]->buffer)
-                   .setOffset(0)
-				   .setRange(sizeof(MVP));
+  for (size_t i = 0; i < descriptorSets.size(); i++) {
+    // bind MVP buffer
+    vk::DescriptorBufferInfo bufferInfo1;
+    bufferInfo1.setBuffer(deviceUniformBuffers[i]->buffer)
+        .setOffset(0)
+        .setRange(sizeof(MVP));
 
-        vk::WriteDescriptorSet writeInfos;
-        writeInfos.setBufferInfo(bufferInfo1)
-                  .setDstBinding(0)
-                  .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-                  .setDescriptorCount(1)
-                  .setDstArrayElement(0)
-                  .setDstSet(descriptorSets[i].set);
+    // bind sampler
+    vk::DescriptorImageInfo imageInfo;
+    imageInfo
+        .setImageLayout(
+            vk::ImageLayout::eShaderReadOnlyOptimal)
+        .setImageView(texture->view)
+        .setSampler(sampler);
 
-        Application::GetInstance().device.updateDescriptorSets(writeInfos, {});
-    }
+    std::array<vk::WriteDescriptorSet, 2> writeInfos;
+    writeInfos[0]
+        .setBufferInfo(bufferInfo1)
+        .setDstBinding(0)
+        .setDescriptorType(
+            vk::DescriptorType::eUniformBuffer)
+        .setDescriptorCount(1)
+        .setDstArrayElement(0)
+        .setDstSet(descriptorSets[i].set);
+
+    writeInfos[1]
+        .setImageInfo(imageInfo)
+        .setDstBinding(1)
+        .setDstArrayElement(0)
+        .setDstSet(descriptorSets[i].set)
+        .setDescriptorCount(1)
+        .setDescriptorType(
+            vk::DescriptorType::eCombinedImageSampler);
+
+    Application::GetInstance().device.updateDescriptorSets(
+        writeInfos, {});
+  }
+}
+
+auto Renderer::createTexture() -> void {
+  texture = std::make_unique<Texture>(
+      "resources/RT.png", sampler);
+}
+auto Renderer::createSampler() -> void {
+  vk::SamplerCreateInfo createInfo;
+  createInfo.setMagFilter(vk::Filter::eLinear)
+      .setMinFilter(vk::Filter::eLinear)
+      .setAddressModeU(vk::SamplerAddressMode::eRepeat)
+      .setAddressModeV(vk::SamplerAddressMode::eRepeat)
+      .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+      .setAnisotropyEnable(false)
+      .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
+      .setUnnormalizedCoordinates(false)
+      .setCompareEnable(false)
+      .setMipmapMode(vk::SamplerMipmapMode::eLinear);
+  sampler = Application::GetInstance().device.createSampler(
+      createInfo);
 }
 
 } // namespace app

@@ -124,11 +124,12 @@ void Swapchain::createImageViews() {
 }
 
 void Swapchain::createFrameBuffers() {
-  auto &width = info.imageExtent.width, &height = info.imageExtent.height;
+  auto &width = info.imageExtent.width,
+       &height = info.imageExtent.height;
   framebuffers.resize(images.size());
   for (size_t i = 0; i < images.size(); ++i) {
     vk::FramebufferCreateInfo createInfo;
-    //需要 renderProcess
+    // 需要 renderProcess
     createInfo.setAttachments(imageViews[i])
         .setWidth(width)
         .setHeight(height)

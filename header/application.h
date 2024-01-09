@@ -27,7 +27,8 @@ struct QueueFamilyIndices {
   std::optional<uint32_t> graphicQueue;
   std::optional<uint32_t> presentQueue;
   operator bool() {
-    return graphicQueue.has_value() && presentQueue.has_value();
+    return graphicQueue.has_value() &&
+           presentQueue.has_value();
   }
 };
 
@@ -37,10 +38,13 @@ private:
   // 单例
   static std::unique_ptr<Application> instance_;
   // 私有构造函数，防止外部实例化
-  Application(uint32_t w, uint32_t h) : width(w), height(h){};
+  Application(uint32_t w, uint32_t h)
+      : width(w), height(h){};
 
 public:
-  static auto GetInstance() -> Application & { return *instance_; }
+  static auto GetInstance() -> Application & {
+    return *instance_;
+  }
   static void Init(uint32_t w, uint32_t h);
   static void Quit();
 
@@ -70,15 +74,16 @@ public:
   std::unique_ptr<RenderProcess> renderProcess;
   // renderer
   std::unique_ptr<Renderer> renderer;
-  // 采样器
-  vk::Sampler sampler;
+  // // 采样器
+  // vk::Sampler sampler;
 
 public:
   void run();
 
   // 禁止复制构造函数和赋值运算符
   Application(const Application &) = delete;
-  auto operator=(const Application &) -> Application & = delete;
+  auto operator=(const Application &)
+      -> Application & = delete;
 
 private:
   void initwindow();

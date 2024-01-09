@@ -4,20 +4,40 @@
 
 namespace app {
 
-std::unique_ptr<DescriptorSetManager> DescriptorSetManager::instance = nullptr;
+std::unique_ptr<DescriptorSetManager>
+    DescriptorSetManager::instance = nullptr;
 
-DescriptorSetManager::DescriptorSetManager(uint32_t maxFlight)
+DescriptorSetManager::DescriptorSetManager(
+    uint32_t maxFlight)
     : maxFlight(maxFlight) {
-  vk::DescriptorPoolSize size;
-  size.setType(vk::DescriptorType::eUniformBuffer)
-      .setDescriptorCount(2 * maxFlight);
+  std::array<vk::DescriptorPoolSize, 2> size;
+  size[0]
+      .setType(vk::DescriptorType::eUniformBuffer)
+      .setDescriptorCount(maxFlight);
+  size[1]
+      .setType(vk::DescriptorType::eCombinedImageSampler)
+      .setDescriptorCount(maxFlight);
   vk::DescriptorPoolCreateInfo createInfo;
   createInfo.setMaxSets(maxFlight).setPoolSizes(size);
-  auto pool =
-      Application::GetInstance().device.createDescriptorPool(createInfo);
+  auto pool = Application::GetInstance()
+                  .device.createDescriptorPool(createInfo);
   bufferSetPool.pool = pool;
   bufferSetPool.remainNum_ = maxFlight;
 }
+
+// DescriptorSetManager::DescriptorSetManager(uint32_t
+// maxFlight)
+//     : maxFlight(maxFlight) {
+//   vk::DescriptorPoolSize size;
+//   size.setType(vk::DescriptorType::eUniformBuffer)
+//       .setDescriptorCount(maxFlight);
+//   vk::DescriptorPoolCreateInfo createInfo;
+//   createInfo.setMaxSets(maxFlight).setPoolSizes(size);
+//   auto pool =
+//       Application::GetInstance().device.createDescriptorPool(createInfo);
+//   bufferSetPool.pool = pool;
+//   bufferSetPool.remainNum_ = maxFlight;
+// }
 
 DescriptorSetManager::~DescriptorSetManager() {
   auto &device = Application::GetInstance().device;
@@ -38,24 +58,25 @@ void DescriptorSetManager::addImageSetPool() {
   size.setType(vk::DescriptorType::eCombinedImageSampler)
       .setDescriptorCount(MaxSetNum);
   vk::DescriptorPoolCreateInfo createInfo;
-  createInfo.setMaxSets(MaxSetNum).setPoolSizes(size).setFlags(
-      vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet);
-  auto pool =
-      Application::GetInstance().device.createDescriptorPool(createInfo);
+  createInfo.setMaxSets(MaxSetNum)
+      .setPoolSizes(size)
+      .setFlags(vk::DescriptorPoolCreateFlagBits::
+              eFreeDescriptorSet);
+  auto pool = Application::GetInstance()
+                  .device.createDescriptorPool(createInfo);
   avalibleImageSetPool.push_back({pool, MaxSetNum});
 }
 
-auto
-DescriptorSetManager::AllocBufferSets(uint32_t num) -> std::vector<DescriptorSetManager::SetInfo> {
-  std::vector<vk::DescriptorSetLayout> layouts(
-      maxFlight,
+auto DescriptorSetManager::AllocBufferSets(uint32_t num)
+    -> std::vector<DescriptorSetManager::SetInfo> {
+  std::vector<vk::DescriptorSetLayout> layouts(maxFlight,
       Application::GetInstance().shader->layouts[0]);
   vk::DescriptorSetAllocateInfo allocInfo;
   allocInfo.setDescriptorPool(bufferSetPool.pool)
       .setDescriptorSetCount(num)
       .setSetLayouts(layouts);
-  auto sets =
-      Application::GetInstance().device.allocateDescriptorSets(allocInfo);
+  auto sets = Application::GetInstance()
+                  .device.allocateDescriptorSets(allocInfo);
 
   std::vector<SetInfo> result(num);
 
@@ -67,23 +88,53 @@ DescriptorSetManager::AllocBufferSets(uint32_t num) -> std::vector<DescriptorSet
   return result;
 }
 
-auto DescriptorSetManager::AllocImageSet() -> DescriptorSetManager::SetInfo {
+// auto DescriptorSetManager::AllocImageSet() ->
+// DescriptorSetManager::SetInfo {
+//   std::vector<vk::DescriptorSetLayout> layouts{
+//     maxFlight,
+//       Application::GetInstance().shader->layouts[0]};
+//   vk::DescriptorSetAllocateInfo allocInfo;
+//   auto &poolInfo = getAvaliableImagePoolInfo();
+//   allocInfo.setDescriptorPool(poolInfo.pool)
+//       .setDescriptorSetCount(maxFlight)
+//       .setSetLayouts(layouts);
+//   auto sets =
+//       Application::GetInstance().device.allocateDescriptorSets(allocInfo);
+
+//   SetInfo result;
+//   result.pool = poolInfo.pool;
+//   result.set = sets[0];
+
+//   poolInfo.remainNum_ =
+//       std::max<int>(static_cast<int>(poolInfo.remainNum_)
+//       - sets.size(), 0);
+//   if (poolInfo.remainNum_ == 0) {
+//     fulledImageSetPool.push_back(poolInfo);
+//     avalibleImageSetPool.pop_back();
+//   }
+
+//   return result;
+// }
+
+auto DescriptorSetManager::AllocImageSet()
+    -> DescriptorSetManager::SetInfo {
   std::vector<vk::DescriptorSetLayout> layouts{
-      Application::GetInstance().shader->layouts[1]};
+      Application::GetInstance().shader->layouts[0]};
   vk::DescriptorSetAllocateInfo allocInfo;
   auto &poolInfo = getAvaliableImagePoolInfo();
   allocInfo.setDescriptorPool(poolInfo.pool)
       .setDescriptorSetCount(1)
       .setSetLayouts(layouts);
-  auto sets =
-      Application::GetInstance().device.allocateDescriptorSets(allocInfo);
+  auto sets = Application::GetInstance()
+                  .device.allocateDescriptorSets(allocInfo);
 
   SetInfo result;
   result.pool = poolInfo.pool;
   result.set = sets[0];
 
-  poolInfo.remainNum_ =
-      std::max<int>(static_cast<int>(poolInfo.remainNum_) - sets.size(), 0);
+  poolInfo.remainNum_ = std::max<int>(
+      static_cast<int>(poolInfo.remainNum_) - sets.size(),
+      0);
   if (poolInfo.remainNum_ == 0) {
     fulledImageSetPool.push_back(poolInfo);
     avalibleImageSetPool.pop_back();
@@ -92,10 +143,13 @@ auto DescriptorSetManager::AllocImageSet() -> DescriptorSetManager::SetInfo {
   return result;
 }
 
-void DescriptorSetManager::FreeImageSet(const SetInfo &info) {
-  auto it = std::find_if(
-      fulledImageSetPool.begin(), fulledImageSetPool.end(),
-      [&](const PoolInfo &poolInfo) { return poolInfo.pool == info.pool; });
+void DescriptorSetManager::FreeImageSet(
+    const SetInfo &info) {
+  auto it = std::find_if(fulledImageSetPool.begin(),
+      fulledImageSetPool.end(),
+      [&](const PoolInfo &poolInfo) {
+        return poolInfo.pool == info.pool;
+      });
   if (it != fulledImageSetPool.end()) {
     it->remainNum_++;
     avalibleImageSetPool.push_back(*it);
@@ -103,17 +157,19 @@ void DescriptorSetManager::FreeImageSet(const SetInfo &info) {
     return;
   }
 
-  it = std::find_if(
-      avalibleImageSetPool.begin(), avalibleImageSetPool.end(),
-      [&](const PoolInfo &poolInfo) { return poolInfo.pool == info.pool; });
+  it = std::find_if(avalibleImageSetPool.begin(),
+      avalibleImageSetPool.end(),
+      [&](const PoolInfo &poolInfo) {
+        return poolInfo.pool == info.pool;
+      });
   if (it != avalibleImageSetPool.end()) {
     it->remainNum_++;
     return;
   }
 }
 
-auto
-DescriptorSetManager::getAvaliableImagePoolInfo() -> DescriptorSetManager::PoolInfo & {
+auto DescriptorSetManager::getAvaliableImagePoolInfo()
+    -> DescriptorSetManager::PoolInfo & {
   if (avalibleImageSetPool.empty()) {
     addImageSetPool();
     return avalibleImageSetPool.back();

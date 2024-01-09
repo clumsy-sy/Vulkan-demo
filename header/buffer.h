@@ -11,7 +11,8 @@ struct BufferPkg {
   size_t size;
   size_t requireSize;
 
-  BufferPkg(size_t size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags property);
+  BufferPkg(size_t size, vk::BufferUsageFlags usage,
+      vk::MemoryPropertyFlags property);
   ~BufferPkg();
 
   BufferPkg(const BufferPkg &) = delete;
@@ -19,6 +20,6 @@ struct BufferPkg {
 };
 
 auto QueryBufferMemTypeIndex(std::uint32_t requirementBit,
-                             vk::MemoryPropertyFlags) -> std::uint32_t;
+    vk::MemoryPropertyFlags) -> std::uint32_t;
 
 } // namespace app

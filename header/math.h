@@ -16,7 +16,8 @@ namespace app {
 //   };
 
 //   static auto GetAttributeDescription()
-//       -> std::vector<vk::VertexInputAttributeDescription>;
+//       ->
+//       std::vector<vk::VertexInputAttributeDescription>;
 //   static auto GetBindingDescription()
 //       -> std::vector<vk::VertexInputBindingDescription>;
 // };
@@ -36,15 +37,18 @@ namespace app {
 // public:
 //   static auto CreateIdentity() -> Mat4;
 //   static auto CreateOnes() -> Mat4;
-//   static auto CreateOrtho(int left, int right, int top, int bottom, int near,
+//   static auto CreateOrtho(int left, int right, int top,
+//   int bottom, int near,
 //                           int far) -> Mat4;
 //   static auto CreateTranslate(const Vec &) -> Mat4;
 //   static auto CreateScale(const Vec &) -> Mat4;
-//   static auto Create(const std::initializer_list<float> &) -> Mat4;
+//   static auto Create(const std::initializer_list<float>
+//   &) -> Mat4;
 
 //   Mat4();
-//   [[nodiscard]] auto GetData() const -> const float * { return data_; }
-//   void Set(int x, int y, float value) { data_[x * 4 + y] = value; }
+//   [[nodiscard]] auto GetData() const -> const float * {
+//   return data_; } void Set(int x, int y, float value) {
+//   data_[x * 4 + y] = value; }
 //   [[nodiscard]] auto Get(int x, int y) const -> float {
 //     return data_[x * 4 + y];
 //   }

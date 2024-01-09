@@ -28,10 +28,11 @@ link_directories("C:/Users/Sy200/Libraries/glfw-3.3.8.bin.WIN64/glfw-3.3.8.bin.W
 
 # 将源代码添加到此项目的可执行文件。
 
+aux_source_directory(external EXT)
 aux_source_directory(header HEAD)
 aux_source_directory(src SRC)
 
-add_executable (Vulkan-demo ${HEAD} ${SRC} "main.cpp")
+add_executable (Vulkan-demo ${HEAD} ${SRC} ${EXT} "main.cpp")
 
 # 消除有中文的报错 && 默认库“MSVCRT”与其他库的使用冲突；请使用 /NODEFAULTLIB:library
 if(MSVC)

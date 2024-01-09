@@ -11,11 +11,13 @@ public:
   ~CommandManager();
 
   auto CreateOneCommandBuffer() -> vk::CommandBuffer;
-  auto CreateCommandBuffers(std::uint32_t count) -> std::vector<vk::CommandBuffer>;
+  auto CreateCommandBuffers(std::uint32_t count)
+      -> std::vector<vk::CommandBuffer>;
   void ResetCmds();
   void FreeCmd(const vk::CommandBuffer &);
 
-  using RecordCmdFunc = std::function<void(vk::CommandBuffer &)>;
+  using RecordCmdFunc =
+      std::function<void(vk::CommandBuffer &)>;
   void ExecuteCmd(vk::Queue, RecordCmdFunc);
 
 private:
@@ -24,4 +26,4 @@ private:
   auto createCommandPool() -> vk::CommandPool;
 };
 
-} // namespace toy2d
+} // namespace app

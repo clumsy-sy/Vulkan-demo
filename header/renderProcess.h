@@ -13,12 +13,14 @@ public:
   RenderProcess();
   ~RenderProcess();
 
-  void RecreateGraphicsPipeline(const Shader& shader);
+  void RecreateGraphicsPipeline(const Shader &shader);
   void RecreateRenderPass();
+
 private:
-    auto createLayout() -> vk::PipelineLayout;
-    auto createGraphicsPipeline(const Shader& shader) -> vk::Pipeline;
-    auto createRenderPass() -> vk::RenderPass;
+  auto createLayout() -> vk::PipelineLayout;
+  auto createGraphicsPipeline(const Shader &shader)
+      -> vk::Pipeline;
+  auto createRenderPass() -> vk::RenderPass;
   // void InitRenderPass();
   // void InitLayout();
   // void createGraphicsPipeline(const Shader& shader);
